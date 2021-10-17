@@ -1,0 +1,28 @@
+{
+  "name": "inflearn-mongodb-course-63723",
+  "version": "1.0.0",
+  "description": "Lecture : [몽고디비-기초-실무](https://www.inflearn.com/course/c/dashboard)",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lucy74310/inflearn-mongodb-course-63723.git"
+  },
+  "author": "lucy (bgjo)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lucy74310/inflearn-mongodb-course-63723/issues"
+  },
+  "homepage": "https://github.com/lucy74310/inflearn-mongodb-course-63723#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "mongoose": "^6.0.11"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.13"
+  }
+}
