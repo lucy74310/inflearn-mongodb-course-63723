@@ -190,4 +190,34 @@ const comment = new Comment({
 });
 ```
 
-### Nesting 성능 테스트
+### 내장된 객체 정보 바꾸기
+
+```
+Blog.updateOne(
+    { "comments._id": commentId },
+    { "comments.$.content": content }
+)
+```
+
+### User 정보 바꾸기
+
+- user
+- blog의 유저
+
+```
+await Blog.updateMany({ "user._id": userId }, { "user.name": name });
+```
+
+- comment 안의 유저도 바꿔야한다.
+
+```
+
+```
+
+### 참고
+
+mongoCompass에서 찾을때 부정검색
+
+```
+{'user._id': {$ne: ObjectId('6186aff7673776024677a9cf')}}
+```

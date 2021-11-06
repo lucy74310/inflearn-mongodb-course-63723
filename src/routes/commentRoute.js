@@ -69,4 +69,24 @@ commentRouter.get("/", async (req, res) => {
   }
 });
 
+commentRouter.patch("/:commentId", async (req, res) => {
+  const { commentId } = req.params;
+  const { content } = req.body;
+  console.log(commentId);
+  if (typeof content !== "string")
+    return res.status(400).send({ err: "content is required" });
+
+  const [comment] = await Promise.all([
+    Comment.findOneAndUpdate({ _id: commentId }, { content }, { new: true }),
+    Blog.updateOne(
+      { "comments._id": commentId },
+      { "comments.$.content": content }
+      // comments 배열안에 _id를 가지고 있는 객체
+      // $ : 앞에있는 조건 충족이 된 embed된 객체의 content 수정
+    ),
+  ]);
+
+  return res.send({ comment });
+});
+
 module.exports = { commentRouter };

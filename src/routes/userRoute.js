@@ -1,6 +1,6 @@
 const { Router } = require("express");
 const userRouter = Router();
-const { User } = require("../models");
+const { User, Blog } = require("../models");
 const mongoose = require("mongoose");
 
 userRouter.get("/", async (req, res) => {
@@ -66,7 +66,9 @@ userRouter.put("/:userId", async (req, res) => {
     if (!mongoose.isValidObjectId(userId))
       return res.status(400).send({ err: "invalid userID" });
     const { age, name } = req.body;
-    if (!age || !name)
+    console.log(name);
+
+    if (!age && !name)
       return res.status(400).send({ err: "age or name is required" });
 
     if (age && typeof age !== "number")
@@ -89,10 +91,14 @@ userRouter.put("/:userId", async (req, res) => {
 
     /* findOne & save 방식으로 업데이트하기 */
     let user = await User.findById(userId);
-    console.log({ userBeforeEdit: user });
+    // console.log({ userBeforeEdit: user });
     if (age) user.age = age;
-    if (name) user.name = name;
-    console.log({ userAfterEdit: user });
+    if (name) {
+      user.name = name;
+      await Blog.updateMany({ "user._id": userId }, { "user.name": name });
+      await Blog.updateMany();
+    }
+    // console.log({ userAfterEdit: user });
     await user.save();
     return res.send({ user });
   } catch (err) {
