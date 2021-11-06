@@ -20,17 +20,31 @@ Lecture : [몽고디비-기초-실무](https://www.inflearn.com/course/c/dashboa
 
 <hr>
 
-# CRUD
-
-# Read
+# CRUD 중 Read
 
 - 퍼포먼스에 큰 영향.
   비효율적 vs prod에서 사용하기 좋은 vs 몽고db스러운 방법
   3개의 컬랙션
+- 성능측정
 
-User
-Comment
-Blog
+```
+[1번방법 - 클라이언트에서 계속 호출]
+blogLimit 10 : 5초
+blogLimit 20 : 10초
+blogLimit 50 : 30초
+commentLimit 5 + blogsLimit 20 : 2초
+commentLimit 1 + blogsLimit 20 : 1초
+
+[2번방법 - 백엔드api에서 populate틍해 가져온다]
+blogLimit 20 : 1초
+blogLimit 50 : 2초
+blogLimit 200 : 5초
+
+[3번방법 - embed 시킨다]
+blogLimit 20 : 0.1초대
+blogLimit 50 : 0.4초대
+blogLimit 200 : 0.9초대
+```
 
 ## 1. 비효율적인 방법
 
@@ -105,22 +119,6 @@ BlogSchema.set("toObject", { virtuals: true });
 BlogSchema.set("toJSON", { virtuals: true });
 ```
 
-- 성능측정
-
-```
-[1번방법 - 클라이언트에서 계속 호출]
-blogLimit 10 : 5초
-blogLimit 20 : 10초
-blogLimit 50 : 30초
-commentLimit 5 + blogsLimit 20 : 2초
-commentLimit 1 + blogsLimit 20 : 1초
-
-[2번방법 - 백엔드api에서 populate틍해 가져온다]
-blogLimit 20 : 1초 초반대
-blogLimit 50 : 1초 후반대
-blogLimit 200 : 5초 초반대
-```
-
 ** 1번의 요청으로 다 가져오는 방법! 바로 내장하는 방법..embed.. **
 
 ## 3. 문서내장으로 읽기 퍼포먼스 극대화 (denormalize) -> 몽고db스러운 방법
@@ -130,4 +128,66 @@ blogLimit 200 : 5초 초반대
 - 장점: 간소, 속도 빠름
 - 단점: cud 작업이 늘어남. comment 생성시 blog 에 추가, 유저도 추가
 
-### 적용해보장
+**쓰기비용이 좀 발생하더라도, 읽기가 훨씬 빈번하다.**
+
+### POST API에 적용해보장
+
+- blog안에 user를 내장할거고,
+- comment도 내장할거고
+- comment안에 user 내장할거다.
+
+1. 젤 간단한 USER 내장하기
+   BlogShema 가서 ..
+   필요한 항목만 내장
+
+```
+user: {
+      _id: { type: Types.ObjectId, required: true, ref: "user" },
+      username: { tpye: String, required: true },
+      name: {
+        first: { type: String, required: true },
+        last: { type: String, required: true },
+      },
+    },
+```
+
+- 위처럼 바꿔주면 POST:/blog API 딱히 더 무거워지지않고 수정 완료.
+
+2. 후기 추가
+
+- 가상데이터 주석처리
+- commentSchema 를 import해와서 통째로 내장하기 (blog 정보 중복되는데 일단 이런방법도 있음)
+- blog API 는 수정할 필요 X
+- POST:/blog/{{id}}/comment API 수정 : 후기를 생성할때 blog에도 같이 업데이트 해줘야 한다.
+
+```
+// blogSchema에 추가
+comments: [CommentSchema],
+
+// commentRoute에
+await Promise.all([
+  comment.save(),
+  Blog.updateOne({ _id: blogId }, { $push: { comments: comment } }), // comments 키에 comment를 더해줄거임.
+]);
+
+```
+
+3. 후기에 유저 추가
+
+- 후기 생성할때 userFullName 부분 추가해주기.
+
+```
+// commentSchema
+user: { type: ObjectId, required: true, ref: "user" },
+userFullName: { type: String, required: true},
+
+// commentRoute
+const comment = new Comment({
+  content,
+  user,
+  userFullName: `${user.name.first} ${user.name.last}`,
+  blog,
+});
+```
+
+### Nesting 성능 테스트

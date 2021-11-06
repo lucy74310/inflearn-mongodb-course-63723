@@ -3,7 +3,7 @@ const app = express();
 const { userRouter, blogRouter } = require("./routes");
 
 const mongoose = require("mongoose");
-const { generateFakeData } = require("../faker");
+const { generateFakeData } = require("../faker2");
 
 const MONGO_URI =
   "mongodb+srv://bgjo:test1234!!@mongodbtutorial.s3tff.mongodb.net/BlogService?retryWrites=true&w=majority";
@@ -24,7 +24,12 @@ const server = async () => {
     app.use("/blog", blogRouter);
     // app.use("/blog/:blogId/comment", commentRouter); -> blogRouter안으로 옮김
 
-    app.listen(3000, () => console.log("server listening on port 3000"));
+    app.listen(3000, async () => {
+      console.log("server listening on port 3000");
+      // for (let i = 0; i < 20; i++) {
+      //   await generateFakeData(10, 1, 10);
+      // }
+    });
   } catch (err) {
     console.log(err);
   }

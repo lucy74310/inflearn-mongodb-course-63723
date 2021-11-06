@@ -30,8 +30,19 @@ commentRouter.post("/", async (req, res) => {
       return res.status(400).send({ err: "blog or user does not exist" });
     if (!blog.islive)
       return res.status(400).send({ err: "blog is not available" });
-    const comment = new Comment({ content, user, blog });
-    await comment.save();
+    const comment = new Comment({
+      content,
+      user,
+      userFullName: `${user.name.first} ${user.name.last}`,
+      blog,
+    });
+
+    // let [comment, blog] = // destructuring 해서 하면 되지만 지금은 x
+
+    await Promise.all([
+      comment.save(),
+      Blog.updateOne({ _id: blogId }, { $push: { comments: comment } }), // comments 키에 comment를 더해줄거임.
+    ]);
     return res.send({ comment });
   } catch (err) {
     console.log(err);

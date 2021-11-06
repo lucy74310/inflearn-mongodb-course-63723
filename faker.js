@@ -16,6 +16,7 @@ generateFakeData = async (userCount, blogsPerUser, commentsPerUser) => {
   for (let i = 0; i < userCount; i++) {
     users.push(
       new User({
+        // new 할때 _id가 생성이 된다. db에서 생성해주는게 아니라..
         username: faker.internet.userName() + parseInt(Math.random() * 100),
         name: {
           first: faker.name.firstName(),

@@ -12,13 +12,13 @@ blogRouter.post("/", async (req, res) => {
   try {
     const { title, content, islive, userId } = req.body;
     if (typeof title !== "string")
-      res.status(400).send({ err: "title is required" });
+      return res.status(400).send({ err: "title is required" });
     if (typeof content !== "string")
-      res.status(400).send({ err: "content is required" });
-    if (islive && islive !== "boolean")
-      res.status(400).send({ err: "islive must be a boolean" });
+      return res.status(400).send({ err: "content is required" });
+    if (islive && typeof islive !== "boolean")
+      return res.status(400).send({ err: "islive must be a boolean" });
     if (!isValidObjectId(userId))
-      res.status(400).send({ err: "userId is invalud" });
+      return res.status(400).send({ err: "userId is invalud" });
 
     let user = await User.findById(userId);
     if (!user) res.status(400).send({ err: "user does not exist" });
@@ -37,12 +37,11 @@ blogRouter.get("/", async (req, res) => {
   try {
     // const blogs = await Blog.find({}).limit(20);
     // blog의 유저 추가
-    const blogs = await Blog.find({})
-      .limit(200)
-      .populate([
-        { path: "user" },
-        { path: "comments", populate: { path: "user" } },
-      ]);
+    const blogs = await Blog.find({}).limit(200);
+    // .populate([
+    //   { path: "user" },
+    //   { path: "comments", populate: { path: "user" } },
+    // ]);
     /* 
     mongoose가 내부적으로 해줌. blogs도 한번호출 users 도 한번호출, 그리고 중복은 제거하고 (블로그는 여러개, 같은사람이 쓴) 리턴해줘서 알아서 blogs에 매칭해줌.
     
@@ -95,7 +94,7 @@ blogRouter.put("/:blogId", async (req, res) => {
 
     const blog = await Blog.findOneAndUpdate(
       { _id: blogId },
-      { title, content },
+      { title, content }, // $set: { content : "123 "} 인데 몽구스가 알아서 해준다.
       { new: true }
     );
 
