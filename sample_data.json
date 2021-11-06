@@ -1,0 +1,25 @@
+{
+  "_id": "k203",
+  "title": "mongodb",
+  "content": "welcome to mongodb cocurse!",
+  "user": {
+    "_id": "r23d",
+    "username": "hoffnung"
+  },
+  "comments": [
+    {
+      "content": "first comment!",
+      "user": {
+        "_id": "r23d",
+        "username": "hoffnung"
+      }
+    },
+    {
+      "content": "second comment",
+      "user": {
+        "_id": "23fas",
+        "username": "Yoda"
+      }
+    }
+  ]
+}

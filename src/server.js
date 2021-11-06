@@ -3,6 +3,7 @@ const app = express();
 const { userRouter, blogRouter } = require("./routes");
 
 const mongoose = require("mongoose");
+const { generateFakeData } = require("../faker");
 
 const MONGO_URI =
   "mongodb+srv://bgjo:test1234!!@mongodbtutorial.s3tff.mongodb.net/BlogService?retryWrites=true&w=majority";
@@ -15,6 +16,7 @@ const server = async () => {
     }); // Promise 로 통신
     mongoose.set("debug", true);
     //mongobConnection.then((result) => console.log({ result }));
+    // await generateFakeData(100, 10, 300);
     console.log("MongoDB connected");
     app.use(express.json()); // JSON.parse 미들웨어 추가
 

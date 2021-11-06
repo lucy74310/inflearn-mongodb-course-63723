@@ -23,7 +23,7 @@ blogRouter.post("/", async (req, res) => {
     let user = await User.findById(userId);
     if (!user) res.status(400).send({ err: "user does not exist" });
 
-    let blog = new Blog({ ...req.body, user }); // user 자체를 넘겨줘도 알아서 id만 빼올것.. Types.objectId를 정의해놨기 때문에.
+    let blog = new Blog({ ...req.body, user: user.toObject() }); // user 자체를 넘겨줘도 알아서 id만 빼올것.. Types.objectId를 정의해놨기 때문에.
 
     await blog.save();
     return res.send({ blog });
@@ -35,7 +35,30 @@ blogRouter.post("/", async (req, res) => {
 
 blogRouter.get("/", async (req, res) => {
   try {
-    const blogs = await Blog.find();
+    // const blogs = await Blog.find({}).limit(20);
+    // blog의 유저 추가
+    const blogs = await Blog.find({})
+      .limit(200)
+      .populate([
+        { path: "user" },
+        { path: "comments", populate: { path: "user" } },
+      ]);
+    /* 
+    mongoose가 내부적으로 해줌. blogs도 한번호출 users 도 한번호출, 그리고 중복은 제거하고 (블로그는 여러개, 같은사람이 쓴) 리턴해줘서 알아서 blogs에 매칭해줌.
+    
+    path: comments 추가할때 문제점... blogShema에 comment 를 안들고 있당... comment가 부모 id를 가지고 있다. -> 가상의 comment 필드 추가
+
+    comment 가져올때 blog _id를 중복제거하고 가져와줌. 
+
+    이렇게 안하면 441번정도 호출했을 일을 단 3번 db에 접근해서 가져오게 된다. 
+
+    그담.. comment의 유저를 불러오기... 
+
+    populate를 path 안에서 원하는 만큼 해줄수 있다. 
+
+    populate 추가해줬으니 4번의 호출이 있을것... 
+    */
+
     return res.send({ blogs });
   } catch (err) {
     console.log(err);

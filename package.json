@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon --ignore client.js src/server.js ",
+    "client": "nodemon client.js"
   },
   "repository": {
     "type": "git",
@@ -19,7 +20,9 @@
   },
   "homepage": "https://github.com/lucy74310/inflearn-mongodb-course-63723#readme",
   "dependencies": {
+    "axios": "^0.24.0",
     "express": "^4.17.1",
+    "faker": "^5.5.3",
     "mongoose": "^6.0.11"
   },
   "devDependencies": {

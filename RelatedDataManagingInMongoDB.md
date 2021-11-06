@@ -14,25 +14,120 @@ Lecture : [몽고디비-기초-실무](https://www.inflearn.com/course/c/dashboa
 
 [Node.js 로 Mongodb 다루기](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/RestfulAPIIntro.md)
 
-## Lectrue Part 5. 관계된 데이터 효율적으로 읽기
+## Lectrue Part 5~6. 관계된 데이터 효율적으로 읽기 & 문서내장으로 퍼포먼스 극대화
 
-[관계된 데이터 효율적으로 읽기](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/RelatedDataManagingInMongoDB.md)
+[관계된 데이터 효율적으로 읽기 & 문서내장으로 퍼포먼스 극대화](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/RelatedDataManagingInMongoDB.md)
 
 <hr>
 
-##
+# CRUD
 
-처리하는 부분은 간단..
-validation 잘 만들어주는게 굉장히 중요
-api 주소, url 잘 만들고, post put get delete 잘 지켜주는게 실수를 많이 줄여준다.
+# Read
 
-client code에서도 input 정보 받을때도 당연히 해야
+- 퍼포먼스에 큰 영향.
+  비효율적 vs prod에서 사용하기 좋은 vs 몽고db스러운 방법
+  3개의 컬랙션
 
-이중으로 프론트에서도 백에서도 validation 당연히 해야한다.
+User
+Comment
+Blog
 
-##
+## 1. 비효율적인 방법
 
-POST:/blog/:blogId/comment
-user를 불러오고, blog를 불러오고 순차적으로 할 필요가 없다.
+client.js 참고
 
-- Promise.all 사용
+1. 블로그를 가져온다. -> GET:/blog :: 1번호출 (블로그 10개 가져옴)
+2. 블로그의 유저와 후기를 세팅한다. -> 유저랑 후기를 각각 블로그 10개에 대해 -> GET:/blog/{{id}}/comment x 10 , GET:/user/{{id}} x 10 :: 여기까지 21번의 호출
+3. 후기에 유저를 세팅한다. -> 커멘트 M개 만큼 GET:/user/{{id}} 호출
+   블로그 수 X 후기 수 만큼호출 + 21 번 ...
+
+```
+클라이언트. 자바스크립트에서 돌아가는 코드이다.
+
+그나마 Promise.all 로 묶어서 한번에 병렬로 호출했지만...
+
+총 (1 + N) + N x M (N : 블로그수, M :블로그당 후기수)
+지금 블로그 10개고, 블로그당 후기 10개 ->  121번 호출
+
+-> 운영에선 적합하지 않은 구조
+-> 최대한 백엔드 API를 적게 불러와야 한다.
+
+```
+
+현재 구조의 시간을 구해보자.
+
+```
+console.time('loading time');
+console.timeEnd('loading time');
+하면 실행시간..구할수 있다.
+
+blogLimit 10 : 5초
+blogLimit 20 : 10초
+blogLimit 50 : 30초
+commentLimit 5 + blogsLimit 20 : 2초
+commentLimit 1 + blogsLimit 20 : 1초
+
+```
+
+- 200ms 가 이상적이고, 1초가 넘어가는건 안된다.
+- N+1 Problem
+
+**Promise.all로 묶는다 해도 최소 3번은 그런 묶여진 Promise.all을 호출해야 한다.
+DB호출 너무 많다**
+
+## 2. populate 사용한 방법
+
+- 기존 api를 개선한다
+  get:/blog 를 호출하면 client에서 하던 처리를 다 backend 에서 해준다 .
+- 그렇게 해도 여전히 통신이 너무 많다.
+- 그 다음단계 ...
+
+1. blog가져올때 user를 가져오도록 populate([{path: "user"}]) 추가함.
+
+```
+const blogs = await Blog.find({})
+      .limit(20)
+      .populate([{ path: "user" }]);
+```
+
+2. blog 가져올때 comment 도 가져오려면?
+   지금 blogShema는 comment를 들고있지 않다. commentShema가 갖고 있음
+   그럼 BlogShema에 가상의 comment 필드 추가
+
+```
+BlogSchema.virtual("comments", {
+  ref: "comment",
+  localField: "_id",
+  foreignField: "blog",
+});
+
+BlogSchema.set("toObject", { virtuals: true });
+BlogSchema.set("toJSON", { virtuals: true });
+```
+
+- 성능측정
+
+```
+[1번방법 - 클라이언트에서 계속 호출]
+blogLimit 10 : 5초
+blogLimit 20 : 10초
+blogLimit 50 : 30초
+commentLimit 5 + blogsLimit 20 : 2초
+commentLimit 1 + blogsLimit 20 : 1초
+
+[2번방법 - 백엔드api에서 populate틍해 가져온다]
+blogLimit 20 : 1초 초반대
+blogLimit 50 : 1초 후반대
+blogLimit 200 : 5초 초반대
+```
+
+** 1번의 요청으로 다 가져오는 방법! 바로 내장하는 방법..embed.. **
+
+## 3. 문서내장으로 읽기 퍼포먼스 극대화 (denormalize) -> 몽고db스러운 방법
+
+- 자식 문서를 부모 문서에 아예 내장해버리는거
+- blog 읽어서 바로 리턴!
+- 장점: 간소, 속도 빠름
+- 단점: cud 작업이 늘어남. comment 생성시 blog 에 추가, 유저도 추가
+
+### 적용해보장

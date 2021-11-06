@@ -14,9 +14,9 @@ Lecture : [몽고디비-기초-실무](https://www.inflearn.com/course/c/dashboa
 
 [Node.js 로 Mongodb 다루기](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/RestfulAPIIntro.md)
 
-## Lectrue Part 5. 관계된 데이터 효율적으로 읽기
+## Lectrue Part 5~6. 관계된 데이터 효율적으로 읽기 & 문서내장으로 퍼포먼스 극대화
 
-[관계된 데이터 효율적으로 읽기](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/RelatedDataManagingInMongoDB.md)
+[관계된 데이터 효율적으로 읽기 & 문서내장으로 퍼포먼스 극대화](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/RelatedDataManagingInMongoDB.md)
 
 <hr>
 
