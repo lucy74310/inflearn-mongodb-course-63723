@@ -1,0 +1,96 @@
+# inflearn-mongodb-course-63723 목차
+
+Lecture : [몽고디비-기초-실무](https://www.inflearn.com/course/c/dashboard)
+
+## Lectrue Part 1. Mongodb Intro
+
+[MongodbIntro](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/1_MongodbIntro.md)
+
+## Lectrue Part 2~3 Async Programming
+
+[Async Programming](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/2_AsyncProgramming.md)
+
+## Lectrue Part 4 Node.js 로 Mongodb 다루기
+
+[Node.js 로 Mongodb 다루기](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/3_RestfulAPIIntro.md)
+
+## Lectrue Part 5~7. 관계된 데이터 효율적으로 읽기 & 문서내장으로 퍼포먼스 극대화 ~ 문서내장으로 읽기 퍼포먼스 극대화
+
+[관계된 데이터 효율적으로 읽기 & 문서내장으로 퍼포먼스 극대화](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/4_RelatedDataManagingInMongoDB.md)
+
+## Lectrue Part 7 마지막. 스키마 설계
+
+[스키마설계](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/5_SchemaDesign.md)
+
+<hr>
+
+# Schema Design 
+
+## 1:1 & 1:N
+
+[1:1] 예
+- 블로그에 user가 저장된거
+- 후기에 user가 저장된거
+
+[1:N] 예
+- 블로그에 comment가 저장된거
+
+
+- [관계] : 데이터를 관계로 놔두고 분리해서 populate로 가져오는것
+- [내장] : 데이터를 내장시켜서 한번에 가져오는것
+
+기준이 무엇일까 
+
+아래 네 질문을 계속 끊임없이 하면서 Schema를 발전시킨다!!
+
+** 개별적으로 읽을때도 있다? -> 관계**
+ㄴ 코멘트를 따로 읽을때가 있다. -> 분리(정규화)
+**내장하려는 문저가 자주 바뀐다? -> 관계**
+ㄴ 정도를 고민해봐야 한다.. 
+ㄴ ex) user.name 빈도가 매우 적다.
+ㄴ ex) comment 후기도 웬만하면 자주 안바뀐다. 
+
+**같이 불러올 때가 많다? -> 내장**
+**읽기 비중이 CUD 보다 더 높다? -> 내장**
+
+
+
+둘다 해당이 되면 관계&내장 둘다 -> 후기랑 사용자가 그랬음. 
+
+
+## 1:N 
+n: 내장하는 문서의 갯수
+
+ex) 1개의 블로그당 후기가 n개 
+
+
+** N < 100 : 내장 ** 
+- 분리도 시키고 내장도 하는 경우도 포함됨. 
+
+** 100 < N < 1000 : 부분(id만) 내장 ** 
+- 자식문서 전체 내장이 아니라 부분(id만) 내장. 
+- 커멘트의 id만 저장하여 populate 함. (배열로 objectId 저장.. )
+- 얘는 왜 굳이 id를 저장할까 ? : 인덱스를 배울건데, 인덱스 처리 없이 자식문서를 가져옴.
+- 부모가 자식의 키를 알고 있으니까 (키는 인덱스처리가 되어있음) 빨리 처리가 가능함.
+(인덱스 : 빨리 탐색할수 있게 해줌)
+
+** 1000 < N : 내장 ** -> 인덱스 관련된 문제가 있다.. 
+- 문서가 너무 무거워지므로 내장시키지 않고 관계로만 저장을 한다.. 
+- 자식 문서에 부모키가 저장되어 있는데, 
+그 자식의 부모키를 또 인덱스 해줘야 한다. 
+
+** N을 다양한 조건으로 탐색한다 : 관계  **
+블로그의 후기를 불러오는데.. 
+
+누가쓴 후기만 불러오겠다
+몇시부터 몇시사이 후기를 불러오겠다
+a라는 키워드가 들어있는 후기를 불러오겠다 
+
+
+확실하지 않을땐 관계로 저장했다가
+부하가 걸리는지 보고 복제해서 내장하면 됨.
+
+**처음부터 완벽하게 할 필요 없다.**
+
+
+

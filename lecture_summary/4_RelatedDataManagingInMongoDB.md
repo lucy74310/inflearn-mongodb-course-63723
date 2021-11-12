@@ -4,19 +4,23 @@ Lecture : [몽고디비-기초-실무](https://www.inflearn.com/course/c/dashboa
 
 ## Lectrue Part 1. Mongodb Intro
 
-[MongodbIntro](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/MongodbIntro.md)
+[MongodbIntro](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/1_MongodbIntro.md)
 
 ## Lectrue Part 2~3 Async Programming
 
-[Async Programming](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/AsyncProgramming.md)
+[Async Programming](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/2_AsyncProgramming.md)
 
 ## Lectrue Part 4 Node.js 로 Mongodb 다루기
 
-[Node.js 로 Mongodb 다루기](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/RestfulAPIIntro.md)
+[Node.js 로 Mongodb 다루기](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/3_RestfulAPIIntro.md)
 
-## Lectrue Part 5~6. 관계된 데이터 효율적으로 읽기 & 문서내장으로 퍼포먼스 극대화
+## Lectrue Part 5~7. 관계된 데이터 효율적으로 읽기 & 문서내장으로 퍼포먼스 극대화 ~ 문서내장으로 읽기 퍼포먼스 극대화
 
-[관계된 데이터 효율적으로 읽기 & 문서내장으로 퍼포먼스 극대화](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/RelatedDataManagingInMongoDB.md)
+[관계된 데이터 효율적으로 읽기 & 문서내장으로 퍼포먼스 극대화](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/4_RelatedDataManagingInMongoDB.md)
+
+## Lectrue Part 7 마지막. 스키마 설계
+
+[스키마설계](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/5_SchemaDesign.md)
 
 <hr>
 
@@ -136,7 +140,7 @@ BlogSchema.set("toJSON", { virtuals: true });
 - comment도 내장할거고
 - comment안에 user 내장할거다.
 
-1. 젤 간단한 USER 내장하기
+1. Blog에 user 내장하기
    BlogShema 가서 ..
    필요한 항목만 내장
 
@@ -190,16 +194,20 @@ const comment = new Comment({
 });
 ```
 
-### 내장된 객체 정보 바꾸기
+#### 후기 수정 : blog.comments.$.content 수정
+
+내장된 객체가 배열일때 option이 충족된 배열만 정보 바꾸기
 
 ```
 Blog.updateOne(
-    { "comments._id": commentId },
+    { "comments._id": commentId }, // option
     { "comments.$.content": content }
 )
 ```
 
-### User 정보 바꾸기
+### 유저의 이름을 바꾸면, User의 user.name과 blog안의 user.name 데이터와 blog안의 comments 배열중 해당하는 user가 있으면 그 유저의 userFullName 수정
+
+#### 내장된 객체가 객체일때 User 정보 바꾸기
 
 - user
 - blog의 유저
@@ -211,13 +219,61 @@ await Blog.updateMany({ "user._id": userId }, { "user.name": name });
 - comment 안의 유저도 바꿔야한다.
 
 ```
+await Blog.udateMany(
+        {},
+        { "comments.$[element].userFullName": `${name.first} ${name.last}` }, // element는 comment객체 그 자체
+        { arrayFilters: [{ "element.user._id": userId }] } // 위 element 중 이거에 해당되는 것만 처리를 해준다.
+      );
+```
 
+4. Comment Delete 하기
+
+- 블로그에서 해당 커멘트 삭제하기
+
+```
+$push가 배열에 넣어주는 거였다면
+$pull은 제거해주는거
+
+await Blog.updateOne(
+    { "comments._id": commentId },
+    { $pull: { comments: { _id: commentId } } }
+    // { $pull: { comments: { content: "hello", state: true } } }  _id가 아니고 content와 state라는게 true일때 -> 둘중에 하나만 충족되도 pull 된다.
+    // 둘다 충족될때 삭제하고 싶다면 $elemMatch 쓴다.
+    // { $pull: { comments: { $elemMatch: { content: "hello", state: true } } } }
+  );
+
+```
+
+5. User 삭제하기
+
+유저가 쓴 블로그도 삭제
+유저가 쓴 커멘트도 삭제
+커멘트 삭제
+
+```
+const [user] = await Promise.all([
+      User.findOneAndDelete({ _id: userId }),
+      Blog.deleteMany({ "user._id": userId }),
+      Blog.updateMany(
+        { "comments.user": userId },
+        { $pull: { commnets: { user: userId } } }
+      ),
+      Comment.deleteMany({ user: userId }),
+    ]);
 ```
 
 ### 참고
 
-mongoCompass에서 찾을때 부정검색
+mongoCompass에서 찾을때
+
+- 부정검색
 
 ```
 {'user._id': {$ne: ObjectId('6186aff7673776024677a9cf')}}
+```
+
+- 내장된 객체가 배열일때 그 배열줄 조건충족하는 거 찾을때
+
+```
+{ "comments.user" : ObjectId('6186aff7673776024677a9cf')}
 ```

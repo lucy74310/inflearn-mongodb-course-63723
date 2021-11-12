@@ -82,11 +82,25 @@ commentRouter.patch("/:commentId", async (req, res) => {
       { "comments._id": commentId },
       { "comments.$.content": content }
       // comments 배열안에 _id를 가지고 있는 객체
-      // $ : 앞에있는 조건 충족이 된 embed된 객체의 content 수정
+      // $ : 배열 속에서 앞에있는 조건이 맞는 embed된 객체의 content 수정
+
+      // { "comments.$[].content": content } 배열안의 모든 content 수정해줌
     ),
   ]);
 
   return res.send({ comment });
 });
 
+commentRouter.delete("/:commentId", async (req, res) => {
+  const { commentId } = req.params;
+  const comment = await Comment.findOneAndDelete({ _id: commentId });
+  await Blog.updateOne(
+    { "comments._id": commentId },
+    { $pull: { comments: { _id: commentId } } }
+    // { $pull: { comments: { content: "hello", state: true } } }  _id가 아니고 content와 state라는게 true일때 -> 둘중에 하나만 충족되도 pull 된다.
+    // 둘다 충족될때 삭제하고 싶다면 $elemMatch 쓴다.
+    // { $pull: { comments: { $elemMatch: { content: "hello", state: true } } } }
+  );
+  return res.send({ comment });
+});
 module.exports = { commentRouter };

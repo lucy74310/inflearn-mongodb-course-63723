@@ -1,6 +1,6 @@
 const { Router } = require("express");
 const userRouter = Router();
-const { User, Blog } = require("../models");
+const { User, Blog, Comment } = require("../models");
 const mongoose = require("mongoose");
 
 userRouter.get("/", async (req, res) => {
@@ -51,7 +51,23 @@ userRouter.delete("/:userId", async (req, res) => {
     const { userId } = req.params;
     if (!mongoose.isValidObjectId(userId))
       return res.status(400).send({ err: "invalid userID" });
-    const user = await User.findOneAndDelete({ _id: userId });
+    // const user = await User.findOneAndDelete({ _id: userId });
+    // await Blog.deleteMany({ "user._id": userId });
+    // await Blog.updateMany(
+    //   { "comments.user": userId },
+    //   { $pull: { commnets: { user: userId } } }
+    // );
+    // await Comment.deleteMany({ user: userId });
+
+    const [user] = await Promise.all([
+      User.findOneAndDelete({ _id: userId }),
+      Blog.deleteMany({ "user._id": userId }),
+      Blog.updateMany(
+        { "comments.user": userId },
+        { $pull: { commnets: { user: userId } } }
+      ),
+      Comment.deleteMany({ user: userId }),
+    ]);
     return res.send({ user });
   } catch (err) {
     console.log(err);
@@ -95,8 +111,16 @@ userRouter.put("/:userId", async (req, res) => {
     if (age) user.age = age;
     if (name) {
       user.name = name;
-      await Blog.updateMany({ "user._id": userId }, { "user.name": name });
-      await Blog.updateMany();
+      await Promise.all([
+        // 1. Blog 의 user.name 수정하기
+        Blog.updateMany({ "user._id": userId }, { "user.name": name }), //user가 comment처럼 배열이 아니고 객체이니까 그냥 user.name에 넣으면 됨.
+        // 2. Blog.comments 중 해당하는 user만 userFullName 수정하기.
+        Blog.updateMany(
+          {},
+          { "comments.$[element].userFullName": `${name.first} ${name.last}` }, // element는 comment객체 그 자체
+          { arrayFilters: [{ "element.user": userId }] } // 위 element 중 이거에 해당되는 것만 처리를 해준다.
+        ),
+      ]);
     }
     // console.log({ userAfterEdit: user });
     await user.save();

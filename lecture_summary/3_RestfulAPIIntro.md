@@ -4,19 +4,23 @@ Lecture : [몽고디비-기초-실무](https://www.inflearn.com/course/c/dashboa
 
 ## Lectrue Part 1. Mongodb Intro
 
-[MongodbIntro](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/MongodbIntro.md)
+[MongodbIntro](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/1_MongodbIntro.md)
 
 ## Lectrue Part 2~3 Async Programming
 
-[Async Programming](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/AsyncProgramming.md)
+[Async Programming](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/2_AsyncProgramming.md)
 
 ## Lectrue Part 4 Node.js 로 Mongodb 다루기
 
-[Node.js 로 Mongodb 다루기](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/RestfulAPIIntro.md)
+[Node.js 로 Mongodb 다루기](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/3_RestfulAPIIntro.md)
 
-## Lectrue Part 5~6. 관계된 데이터 효율적으로 읽기 & 문서내장으로 퍼포먼스 극대화
+## Lectrue Part 5~7. 관계된 데이터 효율적으로 읽기 & 문서내장으로 퍼포먼스 극대화 ~ 문서내장으로 읽기 퍼포먼스 극대화
 
-[관계된 데이터 효율적으로 읽기 & 문서내장으로 퍼포먼스 극대화](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/RelatedDataManagingInMongoDB.md)
+[관계된 데이터 효율적으로 읽기 & 문서내장으로 퍼포먼스 극대화](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/4_RelatedDataManagingInMongoDB.md)
+
+## Lectrue Part 7 마지막. 스키마 설계
+
+[스키마설계](https://github.com/lucy74310/inflearn-mongodb-course-63723/tree/main/5_SchemaDesign.md)
 
 <hr>
 ```
